@@ -1,3 +1,4 @@
+.vscode/
 backend/process.env
 frontend/server/ssl
 frontend/app/node_modules
