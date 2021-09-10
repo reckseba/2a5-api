@@ -1,1 +1,5 @@
+backend/process.env
 frontend/server/ssl
+frontend/app/node_modules
+frontend/app/build
+frontend/server/build
