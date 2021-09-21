@@ -5,66 +5,85 @@ const https = require('https');
 const fs = require('fs');
 const { createProxyMiddleware } = require('http-proxy-middleware');
 const helmet = require('helmet');
-require('dotenv').config({path: 'process.env'});
+const crypto = require('crypto');
+require('dotenv').config({path: './config/process.env'});
 
-const conf = process.env;
-
+// init the express server
 const app = express();
 
+// prepare a filter for incoming short URL requests. Those we need to catch and proxy to backend
 const filter = function (pathname, req) {
         const regex = /^\/[A-Za-z0-9]{3,5}/gm;
         return pathname.match(regex) && pathname.length >= (3+1) && pathname.length <= (5+1) && req.method === 'GET';
 };
 
-if(conf.ENVIRONMENT == "prod") {
+let credentials = {};
 
-	// Certificate
-	const privateKey = fs.readFileSync(`ssl/privkey.pem`, 'utf8');
-	const certificate = fs.readFileSync(`ssl/cert.pem`, 'utf8');
-	const ca = fs.readFileSync(`ssl/chain.pem`, 'utf8');
+// http-proxy-middleware can detect self signed certificates. If we detect such, we block to preved mitm attacks
+let secureProxy = true;
 
-	const credentials = {
-		key: privateKey,
-		cert: certificate,
-		ca: ca
-	};
+if(process.env.PROTOCOL == "https") {
 
-	app.use(helmet());
+	if(["test", "local"].includes(process.env.ENVIRONMENT)) {
+		// Certificate
+		credentials.key = fs.readFileSync(`./ssl/test.privkey.pem`, 'utf8');
+		credentials.cert = fs.readFileSync(`./ssl/test.cert.pem`, 'utf8');
+		
+		// but if we are testing: We only have self signed certificates
+		secureProxy = false;
+	}
 
-	// Add a handler to inspect the req.secure flag (see 
-	// http://expressjs.com/api#req.secure). This allows us 
-	// to know whether the request was via http or https.
-	app.use (function (req, res, next) {
-		if (req.secure) {
-				// request was via https, so do no special handling
-				
-				res.setHeader(
-					'Content-Security-Policy',
-					"default-src 'self'; font-src 'self'; img-src 'self' data:; script-src 'self' 'sha256-AAoB7NZRA776ALHTNBNJ0JbtXU4iafu0oepkvAsAGCE='; style-src 'self'; frame-src 'self'"
-				);
-				
+	if(process.env.ENVIRONMENT == "prod") {
+
+		// request was via http, so redirect to https
+		app.use (function (req, res, next) {
+			if (req.secure) {
 				next();
-		} else {
-				// request was via http, so redirect to https
+			} else {
 				res.redirect('https://' + req.headers.host + req.url);
-		}
-	});
+			}
+		});
+
+		credentials.key = fs.readFileSync(`./ssl/privkey.pem`, 'utf8');
+		credentials.cert = fs.readFileSync(`./ssl/cert.pem`, 'utf8');
+		credentials.ca = fs.readFileSync(`./ssl/chain.pem`, 'utf8');
+		
+		app.use((req, res, next) => {
+			res.locals.cspNonce = crypto.randomBytes(16).toString("hex");
+			next();
+		});
+
+		app.use(
+			helmet.contentSecurityPolicy({
+				useDefaults: true,
+				directives: {
+					scriptSrc: [
+						"'self'", 
+						(req, res) => `'nonce-${res.locals.cspNonce}'`
+					],
+				},
+			})
+		);
+
+	}
 
 }
 
 app.use(
 	'/newUrlLong',
 	createProxyMiddleware({
-		target: `${conf.PROTOCOL}://${conf.BACKENDHOST}:${conf.PORTBACKEND}`,
-		changeOrigin: true
+		target: `${process.env.PROTOCOL}://${process.env.BACKENDHOST}:${process.env.PORTBACKEND}`,
+		changeOrigin: true,
+		secure: secureProxy
 	})
 );
 
 app.use(
 	'/*',
 	createProxyMiddleware(filter, {
-		target: `${conf.PROTOCOL}://${conf.BACKENDHOST}:${conf.PORTBACKEND}`,
-		changeOrigin: true
+		target: `${process.env.PROTOCOL}://${process.env.BACKENDHOST}:${process.env.PORTBACKEND}`,
+		changeOrigin: true,
+		secure: secureProxy
 	})
 );
 
@@ -75,19 +94,24 @@ app.get('/', function (req, res) {
 	  res.sendFile(path.join(__dirname, 'build', 'index.html'));
 });
 
-if(conf.ENVIRONMENT == "prod") {
+// start https server if defined in config file
+
+if(process.env.PROTOCOL == "https") {
 
 	const httpsServer = https.createServer(credentials, app);
 
-	httpsServer.listen(conf.PORTFRONTENDHTTPS, () => {
-		console.log(`HTTPS Prod-Server running on port ${conf.PORTFRONTENDHTTPS}`);
+	httpsServer.listen(process.env.PORTFRONTENDHTTPS, () => {
+		console.log(`HTTPS Prod-Server running on port ${process.env.PORTFRONTENDHTTPS}`);
 	});
 
 }
 
+// we launch an http server in all cases. For testing this will be the one we use to
+// interact with our application. But in https mode this will be the one which redirects traffic to https
+
 const httpServer = http.createServer(app);
 
-httpServer.listen(conf.PORTFRONTENDHTTP, () => {
-	console.log(`HTTP Prod-Server running on port ${conf.PORTFRONTENDHTTP}`);
+httpServer.listen(process.env.PORTFRONTENDHTTP, () => {
+	console.log(`HTTP Prod-Server running on port ${process.env.PORTFRONTENDHTTP}`);
 });
 
