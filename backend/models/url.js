@@ -24,7 +24,7 @@ function makeUrlShort(lengthMin, lengthMax, callbackFunction) {
 
 function makeQrCode(urlShort, callbackFunction) {
 
-  qrcode.toDataURL(process.env.PROTOCOL + '://' + process.env.HOSTNAMEURL + ((process.env.ENVIRONMENT == 'test') ? (':' + process.env.PORTFRONTEND) : '') + '/' + urlShort, function (err, urlQrCode) {
+  qrcode.toDataURL(process.env.PROTOCOL + '://' + process.env.HOSTNAMEURL + (['local', 'test'].includes(process.env.ENVIRONMENT) ? (':' + (process.env.PROTOCOL == "https" ? process.env.PORTFRONTENDHTTPS : process.env.PORTFRONTENDHTTP)) : '') + '/' + urlShort, function (err, urlQrCode) {
     callbackFunction(urlQrCode);
   });
   
@@ -65,7 +65,7 @@ UrlSchema.pre('save', function(next) {
   makeUrlShort(3, 5, function(urlShort) {
     // Assigning the id property and calling next() to continue
     self.urlShort = urlShort;
-    self.urlShortFull = process.env.PROTOCOL + '://' + process.env.HOSTNAMEURL + ((process.env.ENVIRONMENT == 'test') ? (':' + process.env.PORTFRONTEND) : '') + '/' + urlShort;
+    self.urlShortFull = process.env.PROTOCOL + '://' + process.env.HOSTNAMEURL + (['local', 'test'].includes(process.env.ENVIRONMENT) ? (':' + (process.env.PROTOCOL == "https" ? process.env.PORTFRONTENDHTTPS : process.env.PORTFRONTENDHTTP)) : '') + '/' + urlShort;
 
     makeQrCode(self.urlShort, function (urlQrCode) {
       self.urlQrCode = urlQrCode;
