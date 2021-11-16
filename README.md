@@ -113,7 +113,7 @@ Nothing to do actually...boring huh?
 ## Run Docker Images
 ```
 cd 2a5
-./deploy local
+./deploy.sh local
 ```
 This is what will happen:
 
