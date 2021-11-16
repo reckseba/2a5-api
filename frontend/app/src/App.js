@@ -8,7 +8,7 @@ function App() {
 
   return (
     <div className="App">
-      <header className="App-header">2a5 URL-Shortner</header>
+      <header className="App-header">2a5 URL-Shortener</header>
       <section>
         <Input />
         <div id="results">
@@ -22,7 +22,7 @@ function App() {
           </div>
         </div>
       </section>
-      <footer>© 2012-2020 2a5.de</footer>
+      <footer>© 2012-2021 2a5.de</footer>
     </div>
   );
 }
