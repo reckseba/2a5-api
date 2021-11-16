@@ -14,19 +14,19 @@ COMMONNAME="test.2a5.de"
 
 echo "Deploy for $ENV"
 
-if [ -e ssl/test.cert.pem ]
-then
-    echo "No need to create new ssl cert."
-else
-    echo "Create new ssl cert.."
-    mkdir -p ssl
-    cd ssl
-    openssl genrsa -out test.privkey.pem
-    openssl req -new -key test.privkey.pem -out test.csr.pem -subj "/C=$COUNTRY/CN=$COMMONNAME"
-    openssl x509 -req -days 9999 -in test.csr.pem -signkey test.privkey.pem -out test.cert.pem
-    rm test.csr.pem
-    cd ..
-fi
+#if [ -e ssl/test.cert.pem ]
+#then
+#    echo "No need to create new ssl cert."
+#else
+#    echo "Create new ssl cert.."
+#    mkdir -p ssl
+#    cd ssl
+#    openssl genrsa -out test.privkey.pem
+#    openssl req -new -key test.privkey.pem -out test.csr.pem -subj "/C=$COUNTRY/CN=$COMMONNAME"
+#    openssl x509 -req -days 9999 -in test.csr.pem -signkey test.privkey.pem -out test.cert.pem
+#    rm test.csr.pem
+#    cd ..
+#fi
 
 
 if [ $ENV == "local" ]
@@ -120,20 +120,21 @@ else
     tar -rvf deploy.tar frontend/server/build frontend/server/config/process.env frontend/server/package.json frontend/server/server-frontend.js
 
     # if this is a test: copy locally created ssl cert
-    if [ $ENV == "test" ]
-    then
-        cp -r ssl backend/ssl
-        cp -r ssl frontend/server/ssl
+#    if [ $ENV == "test" ]
+#    then
+#        cp -r ssl backend/ssl
+#        cp -r ssl frontend/server/ssl
+#
+#        tar -rvf deploy.tar backend/ssl/test.cert.pem
+#        tar -rvf deploy.tar backend/ssl/test.privkey.pem
+#        tar -rvf deploy.tar frontend/server/ssl/test.cert.pem
+#        tar -rvf deploy.tar frontend/server/ssl/test.privkey.pem
+#
+#        rm -rf backend/ssl
+#        rm -rf frontend/server/ssl
+#    fi
 
-        tar -rvf deploy.tar backend/ssl/test.cert.pem
-        tar -rvf deploy.tar backend/ssl/test.privkey.pem
-        tar -rvf deploy.tar frontend/server/ssl/test.cert.pem
-        tar -rvf deploy.tar frontend/server/ssl/test.privkey.pem
-
-        rm -rf backend/ssl
-        rm -rf frontend/server/ssl
-    fi
-
+    
     # cleanup locally
     rm -rf frontend/server/build
     rm -rf frontend/server/config
