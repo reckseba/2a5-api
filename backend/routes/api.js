@@ -3,21 +3,6 @@ const psl = require('psl');
 const router = express.Router();
 const Url = require('../models/url');
 
-// the get action
-router.get('/url', (req, res, next) => {
-
-    res.json({
-        error: "Hello there."
-    });
-
-    /*
-    Url.find({})
-        .then(data => res.json(data))
-        .catch(next);
-    */
-
-});
-
 router.get('/:urlShort', (req, res, next) => {
 
         // /api/urlLong/[urlShort]
@@ -84,12 +69,12 @@ router.post('/newUrlLong', (req, res, next) => {
             if (psl.isValid(hostname)) {
                 
                 // prevent recursive behaviour
-                if(hostname != "2a5.de") {
+                if (hostname != "2a5.de") {
             
                     // lookup if already there
                     Url.countDocuments({urlLong: req.body.urlLong}, function (err, count) {
 
-                        if(count > 0){
+                        if (count > 0){
                             // match
                             // return the exisiting one
                             Url.findOne({"urlLong": req.body.urlLong})
@@ -133,13 +118,5 @@ router.post('/newUrlLong', (req, res, next) => {
     }
 
 });
-
-/*
-router.delete('/url/:id', (req, res, next) => {
-  Url.findOneAndDelete({"_id": req.params.id})
-    .then(data => res.json(data))
-    .catch(next)
-});
-*/
 
 module.exports = router;
