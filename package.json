@@ -1,0 +1,46 @@
+{
+  "name": "2a5",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint",
+    "test": "npx cypress run",
+    "prismagenerate": "npx prisma generate",
+    "prismadbpush": "dotenv -e ./.env.development.local -- npx prisma db push",
+    "prismamigratedev": "dotenv -e ./.env.development.local -- npx prisma migrate dev",
+    "prismamigratedeploy": "dotenv -e ./.env.development.local -- npx prisma migrate deploy"
+  },
+  "dependencies": {
+    "@next/font": "13.1.6",
+    "@prisma/client": "^4.12.0",
+    "@types/psl": "^1.1.0",
+    "@types/react": "18.0.27",
+    "@types/react-dom": "18.0.10",
+    "dotenv-cli": "^7.1.0",
+    "eslint": "8.33.0",
+    "eslint-config-next": "13.1.6",
+    "next": "13.1.6",
+    "psl": "^1.9.0",
+    "qrcode": "^1.5.1",
+    "react": "18.2.0",
+    "react-dom": "18.2.0",
+    "typescript": "4.9.4"
+  },
+  "devDependencies": {
+    "@prisma/nextjs-monorepo-workaround-plugin": "^5.4.2",
+    "@types/chai": "^4.3.4",
+    "@types/node": "^18.11.18",
+    "@types/qrcode": "^1.5.0",
+    "autoprefixer": "^10.4.13",
+    "cypress": "^12.4.1",
+    "dotenv": "^16.0.3",
+    "pg": "^8.10.0",
+    "postcss": "^8.4.21",
+    "prisma": "^4.12.0",
+    "tailwindcss": "^3.2.4",
+    "ts-node": "^10.9.1"
+  }
+}

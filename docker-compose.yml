@@ -1,0 +1,49 @@
+version: "3"
+services:
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${DOCKER_WEB_TARGET:-runnerDevelopment}
+    depends_on: 
+      - db
+    hostname: ${DOCKER_WEB_HOSTNAME:-2a5-web-development}
+    image: ${DOCKER_WEB_IMAGE:-2a5-web-development}
+    ports:
+      - "${DOCKER_WEB_PORT:-3000}:3000"
+    container_name: ${DOCKER_WEB_CONTAINERNAME:-2a5-web-development}
+
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${DOCKER_ADMIN_TARGET:-runnerDevelopmentAdmin}
+    depends_on: 
+      - db
+    hostname: ${DOCKER_ADMIN_HOSTNAME:-2a5-admin-development}
+    image: ${DOCKER_ADMIN_IMAGE:-2a5-admin-development}
+    ports:
+      - "${DOCKER_ADMIN_PORT:-8001}:8001"
+    container_name: ${DOCKER_ADMIN_CONTAINERNAME:-2a5-admin-development}
+
+  db:
+    image: postgres:14-alpine
+    environment:
+      POSTGRES_DB: ${DATABASE_NAME}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD}
+      POSTGRES_USER: ${DATABASE_USERNAME}
+      PGPORT: ${DATABASE_PORT}
+    logging:
+      driver: "none"
+    restart: unless-stopped
+    hostname: ${DATABASE_HOST}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    ports:
+      - "${DATABASE_PORT}:${DATABASE_PORT}"
+    container_name: ${DOCKER_DB_CONTAINERNAME:-2a5-db-development}
+
+volumes:
+  db-data:
+    name: ${DOCKER_DB_VOLUMENAME:-2a5-db-data-development}

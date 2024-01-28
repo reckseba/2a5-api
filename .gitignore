@@ -1,19 +1,47 @@
 .vscode/
 
-deploy.tar
+admin/build
+admin/node_modules
 
-config/process.local.env
-config/process.test.env
-config/process.prod.env
+prisma-client/
 
-ssl/
+migration/backup.json
 
-backend/ssl
-backend/config
+cypress/videos
+cypress/screenshots
 
-frontend/app/node_modules
-frontend/app/build
+# dependencies
+/node_modules
+/.pnp
+.pnp.js
 
-frontend/server/build
-frontend/server/config
-frontend/server/ssl
+# testing
+/coverage
+
+# next.js
+/.next/
+/out/
+
+# production
+/build
+
+# misc
+.DS_Store
+*.pem
+
+# debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# local env files
+.env*.local
+**/.env
+
+# vercel
+.vercel
+
+# typescript
+*.tsbuildinfo
+next-env.d.ts

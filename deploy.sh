@@ -2,167 +2,186 @@
 
 if [ $# -eq 0 ]
 then
-    echo "Please define an environment (local|test|prod)."
-    exit 0
+    echo "Please define an environment (development|test|prod) as first argument."
+    exit 1
+fi
+
+if [ $# -eq 1 ]
+then
+    echo "Please define mode for environemnt as second argument."
+    exit 1
+fi
+
+if [ $# -eq 2 ] && [ $1 != "development" ]
+then
+    echo "Two arguments are only allowed for environment development."
+    exit 1
+fi
+
+if [ $# -eq 3 ] && [ $1 != "test" ] && [ $1 != "prod" ]
+then
+    echo "Three arguments are only allowed for environments test or prod."
+    exit 1
 fi
 
 ENV=$1
-SERVER=$2
-
-COUNTRY="DE"
-COMMONNAME="test.2a5.de"
+MODE=$2
+SERVER=$3
 
 echo "Deploy for $ENV"
 
-#if [ -e ssl/test.cert.pem ]
-#then
-#    echo "No need to create new ssl cert."
-#else
-#    echo "Create new ssl cert.."
-#    mkdir -p ssl
-#    cd ssl
-#    openssl genrsa -out test.privkey.pem
-#    openssl req -new -key test.privkey.pem -out test.csr.pem -subj "/C=$COUNTRY/CN=$COMMONNAME"
-#    openssl x509 -req -days 9999 -in test.csr.pem -signkey test.privkey.pem -out test.cert.pem
-#    rm test.csr.pem
-#    cd ..
-#fi
+stop_server () {
 
-
-if [ $ENV == "local" ]
-then
-    # docker procedure here
-    
-    # TODO prepare docker network!!!
-
-    # take care of backend
-
-    # stop old container
-    docker stop 2a5-backend
-
-    # stop old container
-    docker stop 2a5-frontend
-
-    # create config dir if not yet exists
-    mkdir -p backend/config
-
-    # copy local config file
-    cp config/process.local.env backend/config/process.env
-
-    cp -r ssl backend/ssl
-
-    # switch folder
-    cd backend
-
-    # run build command
-    docker build . -t 2a5-backend
-
-    # run the backend container
-    docker run --rm -p 5000:5000 -d --name 2a5-backend --network="2a5-network" --ip="172.28.0.5" 2a5-backend
-
-    # prompt if running
-    docker ps
-
-    rm -rf config
-    rm -rf ssl
-
-    cd ..
-
-    # take care of frontend
-
-
-    # create config dir if not yet exists
-    mkdir -p frontend/server/config
-
-    # copy local config file
-    cp config/process.local.env frontend/server/config/process.env
-
-    cp -r ssl frontend/server/ssl
-
-    # copy react-app
-    cd frontend
-    cp -r app/build server/build
-
-    # switch folder
-    cd server
-
-    # run build command
-    docker build . -t 2a5-frontend
-
-    # run the frontend container
-    docker run --rm -p 8080:8080 -d --name 2a5-frontend --network="2a5-network" --ip="172.28.0.8" 2a5-frontend
-
-    # prompt if running
-    docker ps
-
-    rm -rf config
-    rm -rf build
-    rm -rf ssl
-    cd ../..
-
-else
-    # connect to server and upload
-
-    # create config dir if not yet exists
-    mkdir -p backend/config
-    mkdir -p frontend/server/config
-
-    # copy config
-    cp config/process.$ENV.env backend/config/process.env
-    cp config/process.$ENV.env frontend/server/config/process.env
-
-    cp -r frontend/app/build frontend/server/build    
-
-    # bundle the files we need
-    tar -cvf deploy.tar backend/config/process.env backend/models/url.js backend/routes/api.js backend/package.json backend/server-backend.js
-
-    # append the bundle with frontend files
-    tar -rvf deploy.tar frontend/server/build frontend/server/config/process.env frontend/server/package.json frontend/server/server-frontend.js
-
-    # if this is a test: copy locally created ssl cert
-#    if [ $ENV == "test" ]
-#    then
-#        cp -r ssl backend/ssl
-#        cp -r ssl frontend/server/ssl
-#
-#        tar -rvf deploy.tar backend/ssl/test.cert.pem
-#        tar -rvf deploy.tar backend/ssl/test.privkey.pem
-#        tar -rvf deploy.tar frontend/server/ssl/test.cert.pem
-#        tar -rvf deploy.tar frontend/server/ssl/test.privkey.pem
-#
-#        rm -rf backend/ssl
-#        rm -rf frontend/server/ssl
-#    fi
-
-    
-    # cleanup locally
-    rm -rf frontend/server/build
-    rm -rf frontend/server/config
-    rm -rf backend/config
-
-    # secure copy to our remote location
-    scp deploy.tar $SERVER:.
-
-    # remove local bundle
-    rm deploy.tar
-
-    # stop all running servers
-    # remove exisiting frontend folder
-    # remove exisitng backend folder
-    # unpack tar file and remove that bundle
-    ssh $SERVER "forever stopall; rm -rf frontend/; rm -rf backend/; tar -xvf deploy.tar; rm deploy.tar;"
-    
-    # if this is prod then copy exisitng ssl files to front- and backend folder locations
-    # TODO: check if all necessary files are present
-    if [ $ENV == "prod" ]
+    if [[ $(docker compose ls -q) == "2a5" ]]
     then
-        ssh $SERVER "cp -r ssl/ backend/ssl; cp -r ssl/ frontend/server/ssl;"
-        # TODO: chmod 400 to all files
+        echo "I'll shut down the runnning docker compose project..."
+        docker compose --env-file ./.env.development.docker.local down
+    else
+        echo "There is no docker compose project running. I'll do nothing and exit."
+    fi
+}
+
+start_server () {
+
+    if [[ $(docker compose ls -q) == "2a5" ]]
+    then
+        echo "There is a docker compose project runnning still. I'll do nothing and exit."
+    else
+        echo "I'll start the docker compose project now..."
+        docker compose --env-file ./.env.development.docker.local build --no-cache
+        docker compose --env-file ./.env.development.docker.local up -d
+    fi
+}
+
+restart_server () {
+
+    stop_server
+    start_server
+
+}
+
+if [ $ENV == "development" ]
+then
+
+    if [ $MODE == "start" ]
+    then
+
+        start_server
+        exit 0
+
+    elif [ $MODE == "stop" ]
+    then
+
+        stop_server
+        exit 0
+
+    elif [ $MODE == "restart" ]
+    then
+
+        restart_server
+        exit 0
+
+    elif [ $MODE == "clean" ]
+    then
+
+        docker volume rm 2a5_db-data
+        exit 0
+
+    else
+
+        echo "Please define mode for development (start|stop|restart|clean)"
+
     fi
 
-    # install npm dependencies for front- and back-end express-servers
-    ssh $SERVER "cd backend; npm install; forever start server-backend.js; cd ../frontend/server; npm install; forever start server-frontend.js; forever list;"
+elif ( [ $ENV == "test" ] || [ $ENV == "prod" ] )
+then
+
+    if [ $MODE == "build" ]
+    then
+
+        rm -rf build/
+        mkdir -p build/
+
+        # check if docker container still running
+        if [[ $(docker compose ls -q) == "2a5-build" ]]
+        then
+            docker stop 2a5-build
+        fi
+
+        # targets the builder stage and stops there - does not run node server inside
+        docker build --no-cache -f Dockerfile --target builder -t 2a5-build .
+
+        # -i argument to keep open
+        docker run --rm -d -i --name 2a5-build 2a5-build
+
+        # copy build increments from docker container
+        docker cp 2a5-build:/app/.next/standalone/. ./build
+
+        # from the documentation: https://nextjs.org/docs/advanced-features/output-file-tracing
+        # Additionally, a minimal server.js file is also output which can be used instead of next start.
+        # This minimal server does not copy the public or .next/static folders by default as these should
+        # ideally be handled by a CDN instead, although these folders can be copied to the standalone/public
+        # and standalone/.next/static folders manually, after which server.js file will serve these automatically.
+        docker cp 2a5-build:/app/.next/static/. ./build/.next/static
+
+        # copy new schema
+        docker cp 2a5-build:/app/prisma/. ./build/prisma
+        # cp -r prisma build/prisma
+
+        # need to stop it due to -i on run
+        docker stop 2a5-build
+
+        # not being copied on build
+        cp -r public build/public
+
+        # copy config
+        cp .env.$ENV.docker.local build/.env
+
+        # bundle the files we need
+        tar -cvf build.tar build
+
+        # append the bundle
+        tar -rvf build.tar docker-compose.yml Dockerfile
+
+        # cleanup locally
+        rm -rf build/
+
+        # secure copy to our remote location
+        scp build.tar $SERVER:.
+
+        # remove local bundle
+        rm build.tar
+
+        # check if containers are running
+        #ssh $SERVER "docker compose --env-file ./build/.env down"
+
+        # stop the running containers
+        ssh $SERVER "docker compose --env-file ./build/.env down"
+        ssh $SERVER "rm -rf build"
+        ssh $SERVER "tar -xvf build.tar"
+        ssh $SERVER "rm build.tar"
+        ssh $SERVER "docker compose --env-file ./build/.env build --no-cache"
+        ssh $SERVER "docker compose --env-file ./build/.env up -d"
+        ssh $SERVER "docker ps"
+
+        # deploy the prisma db schema changes
+        ssh $SERVER "docker exec 2a5-web-$ENV npx prisma migrate deploy"
+
+        exit 0
+
+    elif [ $MODE == "clean" ]
+    then
+
+        ssh $SERVER "docker compose --env-file ./build/.env down"
+        ssh $SERVER "rm -rf build"
+        ssh $SERVER "rm Dockerfile docker-compose.yml"
+
+    fi
+
+else
+
+    echo "Please define an environment (development|test|prod)"
+
+    exit 1
 
 fi
-
-
