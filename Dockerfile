@@ -23,7 +23,6 @@ COPY pages ./pages
 COPY prisma ./prisma
 COPY public ./public
 COPY .eslintrc.json next.config.js package-lock.json package.json tsconfig.json ./
-COPY .env.development.docker.local ./.env
 RUN npm run prismagenerate
 RUN npm run build
 
