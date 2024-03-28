@@ -1,32 +1,6 @@
 version: "3"
 services:
 
-  web:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: ${DOCKER_WEB_TARGET:-runnerDevelopment}
-    depends_on: 
-      - db
-    hostname: ${DOCKER_WEB_HOSTNAME:-2a5-web-development}
-    image: ${DOCKER_WEB_IMAGE:-2a5-web-development}
-    ports:
-      - "${DOCKER_WEB_PORT:-3000}:3000"
-    container_name: ${DOCKER_WEB_CONTAINERNAME:-2a5-web-development}
-
-  admin:
-    build:
-      context: .
-      dockerfile: Dockerfile
-      target: ${DOCKER_ADMIN_TARGET:-runnerDevelopmentAdmin}
-    depends_on: 
-      - db
-    hostname: ${DOCKER_ADMIN_HOSTNAME:-2a5-admin-development}
-    image: ${DOCKER_ADMIN_IMAGE:-2a5-admin-development}
-    ports:
-      - "${DOCKER_ADMIN_PORT:-8001}:8001"
-    container_name: ${DOCKER_ADMIN_CONTAINERNAME:-2a5-admin-development}
-
   db:
     image: postgres:14-alpine
     environment:
@@ -43,6 +17,19 @@ services:
     ports:
       - "${DATABASE_PORT}:${DATABASE_PORT}"
     container_name: ${DOCKER_DB_CONTAINERNAME:-2a5-db-development}
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: ${DOCKER_API_TARGET:-runner}
+    depends_on: 
+      - db
+    hostname: ${DOCKER_API_HOSTNAME:-2a5-api-development}
+    image: ${DOCKER_API_IMAGE:-2a5-api-development}
+    ports:
+      - "${DOCKER_API_PORT:-3000}:3000"
+    container_name: ${DOCKER_API_CONTAINERNAME:-2a5-api-development}
 
 volumes:
   db-data:

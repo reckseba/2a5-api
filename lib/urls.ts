@@ -1,8 +1,9 @@
-import { PrismaClient, CheckType } from "../prisma-client";
+import { CheckType } from "@prisma/client";
 import QRCode from "qrcode";
 import { generateRandomStringOfLength } from "./misc";
 
-const prisma = new PrismaClient();
+import prisma from "./prisma";
+
 
 async function generateQRCode(urlShortFull: string) {
     try {
@@ -16,7 +17,6 @@ async function generateQRCode(urlShortFull: string) {
         console.error(e);
     }
 }
-
 
 async function insertUrlUnChecked(
     urlLong: string,
@@ -130,6 +130,31 @@ export async function createUrl(urlLong: string, hostname: string, linkProtocol:
     return newUrl;
 }
 
+export async function getUrlById(id: number) {
+    return await prisma.urls.findUnique({
+        where: {
+            id: id
+        },
+        select: {
+            hostname: true
+        }
+    });
+}
+
+export async function setUrlCheckedByAdminById(id: number) {
+    await prisma.urls.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: false,
+            deletedAt: null,
+            checkedBy: "ADMIN",
+            checkedAt: new Date()
+        }
+    });
+}
+
 export async function getByUrlLong(urlLong: string) {
     return await prisma.urls.findUnique({
         where: {
@@ -149,5 +174,160 @@ export async function getByUrlShort(urlShort: string) {
         where: {
             urlShort: urlShort,
         },
+    });
+}
+
+export async function getUrlsUndeletedUnchecked() {
+    return await prisma.urls.findMany({
+        where: {
+            deleted: false,
+            checkedBy: null
+        },
+        select: {
+            id: true,
+            urlLong: true,
+            urlShort: true,
+            urlShortFull: true,
+            checkedAt: true,
+            checkedBy: true,
+            deleted: true,
+            deletedAt: true,
+            hostname: true,
+            ipAddressHash: true,
+            createdAt: true
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+}
+
+export async function getUrlsUndeletedChecked() {
+    return await prisma.urls.findMany({
+        where: {
+            deleted: false,
+            NOT: {
+                checkedBy: null
+            }
+        },
+        select: {
+            id: true,
+            urlLong: true,
+            urlShort: true,
+            urlShortFull: true,
+            checkedAt: true,
+            checkedBy: true,
+            deleted: true,
+            deletedAt: true,
+            hostname: true,
+            ipAddressHash: true,
+            createdAt: true
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+}
+
+export async function getUrlsDeletedChecked() {
+    return await prisma.urls.findMany({
+        where: {
+            deleted: true,
+            NOT: {
+                checkedBy: null
+            }
+        },
+        select: {
+            id: true,
+            urlLong: true,
+            urlShort: true,
+            urlShortFull: true,
+            checkedAt: true,
+            checkedBy: true,
+            deleted: true,
+            deletedAt: true,
+            hostname: true,
+            ipAddressHash: true,
+            createdAt: true
+        },
+        orderBy: {
+            createdAt: "desc"
+        }
+    });
+}
+
+export async function deleteUrl(id:number) {
+    // TODO: better to use NOW() function instead of injecting date. could be wrong according to timezone
+    return await prisma.urls.update({
+        where: {
+            id: id
+        },
+        data: {
+            deleted: true,
+            deletedAt: new Date(),
+            checkedBy: "ADMIN",
+            checkedAt: new Date()
+        }
+    });    
+}
+
+export async function getUrlsDeletedByHostname(hostname:string) {
+    return await prisma.urls.findMany({
+        where: {
+            hostname: hostname,
+            deleted: true,
+            NOT: {
+                checkedBy: null
+            }
+        },
+        select: {
+            id: true
+        }
+    });
+}
+
+export async function getUrlsCheckedByHostname(hostname:string) {
+    return await prisma.urls.findMany({
+        where: {
+            hostname: hostname,
+            deleted: false,
+            NOT: {
+                checkedBy: null
+            }
+        },
+        select: {
+            id: true
+        }
+    });
+}
+
+
+export async function setUrlsWhitelistedByHostname(hostname: string) {
+    
+    return await prisma.urls.updateMany({
+        where: {
+            hostname: hostname,
+            checkedBy: null
+        },
+        data: {
+            checkedAt: new Date(),
+            checkedBy: "WHITELIST"
+        }
+    });
+}
+
+export async function setUrlsBlacklistedByHostname(hostname: string) {
+
+    return await prisma.urls.updateMany({
+        where: {
+            hostname: hostname,
+            checkedBy: null
+        },
+        data: {
+            deleted: true,
+            deletedAt: new Date(),
+            checkedBy: "BLACKLIST",
+            checkedAt: new Date()
+        }
     });
 }

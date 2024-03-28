@@ -2,7 +2,7 @@
 Open Source URL-Shortener with combined front- &amp; back-end parts based on React, Next.js, Typescript, TailwindCSS, Prisma, PostgreSQL &amp; Docker for local testing.
 
 ## The Idea
-URLs are long and do not get interpreted as a link very often. To keep link containing short messages short, a url-shortener is needed.
+Long URLs do not get interpreted as links very often. To keep short messages that contain links short, a url-shortener is needed.
 
 ## Reception
 You should not trust any web-service out there. Therefore you should not trust 2a5.de either. There is no way I, as the administrator of 2a5.de, can assure you, as a client, that the software, that my server is running, is what is published here. Whatever leaves your browser must be considered public. If you want nobody else to know, what links you are shortening: host your own instance. This tutorial teaches you how.
@@ -18,30 +18,35 @@ You need to install on your local workstation:
 - docker
 
 Clone the repository:
-```
+```bash
 git clone https://github.com/reckseba/2a5.git
 ```
 
 Install your environment
-```
-cd 2a5
+```bash
+cd 2a5-api
 npm install
 ```
 
-Prepare your local config
+Prepare your local config:
 ```bash
 cp ./.env.development.sample ./.env.development.local
-vim ./.env.development.local
 ```
+Do changes in ./.env.development.local now.
 
 Run the database server:
 ```bash
 docker compose --env-file ./.env.development.local up -d db
 ```
 
+Generate the typescript types out of the schema.
+```bash
+npm run prismagenerate
+```
+
 Push the database schema to postgres (only on first start when docker volume is initially created)
 ```bash
-npm run prismamigratedeploy
+npm run prismadbpush
 ```
 
 Run the nodejs development server:
@@ -71,6 +76,12 @@ __Warning__: This command truncates your table content!
 npm run test
 ```
 
+# Linting
+Run to check for linting errors:
+```bash
+npm run lint
+```
+
 # Deploy Development (locally)
 This runs the environment on docker. It does not support hot reload.
 
@@ -89,9 +100,15 @@ Start the web and db containers
 ./deploy.sh development start
 ```
 
-Push the database schema to postgres (only on first start when docker volume is initially created)
+Push the database schema to postgres (only if not done before on first start when docker volume is initially created)
 ```bash
 npm run prismamigratedeploy
+```
+
+If you like you can run (Run `npm i` before if never done before)
+__Warning__: This command truncates your table content!
+```bash
+npm run test
 ```
 
 Stop the web and db containers
@@ -113,6 +130,12 @@ Host servername
     User yourusername
     IdentityFile ~/.ssh/privatekeyfile
 ```
+
+# Security Considerations 
+
+You could launch this API twice
+- One public facing for the Client-APP with high restrictions on the database
+- The other in private not being exposed to the public with a little more rights to facilitate the admin operations.
 
 # Deploy Test
 This builds, takes the increment, uploads it and runs it in docker on the server.

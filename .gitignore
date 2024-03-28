@@ -1,4 +1,5 @@
 .vscode/
+.idea/
 
 admin/build
 admin/node_modules

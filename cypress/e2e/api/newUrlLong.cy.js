@@ -5,7 +5,7 @@ const getHostname = (urlLong) => {
 
 const deletedUrlLong = "https://thisoneisdeleted.com/somepath.php";
 const deletedUrlShort = "Dl1";
-const deletedUrlShortFull = "https://localhost:3000/" + deletedUrlShort;
+const deletedUrlShortFull = "https://localhost:3001/" + deletedUrlShort;
 const deletedUrlQrCode = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAIQAAACECAYAAABRRIOnAAAAAklEQVR4AewaftIAAAOhSURBVO3BMY5rRwADweZA979yewMHjAZ4kLS2v1kVfzDzt8NMOcyUw0w5zJTDTDnMlMNMOcyUw0w5zJTDTDnMlMNMOcyUw0x58aYk/CaVmyQ8odKScKPyRBJ+k8o7DjPlMFMOM+XFh6l8UhKeUGlJuEnCjUpLQlN5QuWTkvBJh5lymCmHmfLiy5LwhMoTSbhR+aYkNJUnkvCEyjcdZsphphxmyos/XBJuVFoSmsr/yWGmHGbKYaa8+MOo3CThRqUloam0JPxJDjPlMFMOM+XFl6n8piTcqLQk3Ki0JHySyr/JYaYcZsphprz4sCT8k1RaEp5QaUloKi0JTyTh3+wwUw4z5TBTXrxJ5d9M5UblHSo3Kv8lh5lymCmHmfLiTUloKi0Jn6TSVG6S0FRaEm5UWhJuVFoSPknlmw4z5TBTDjMl/uAXJaGpvCMJTeWJJDSVloSm0pLQVG6S0FSeSEJT+aTDTDnMlMNMiT/4oiTcqLQk/CaVJ5LwhMoTSWgqLQk3Ku84zJTDTDnMlBdvSsKNyk0SmspNEprKO5LQVG5UWhKeSMKNyo1KS8InHWbKYaYcZkr8wRuS8ITKE0l4h0pLwhMqTyThRqUloam0JDyh8o7DTDnMlMNMefFlKi0JTaUloam0JDSVloSWhKbSktBUWhKaSktCU7lJQlNpSWgqLQlN5ZMOM+UwUw4zJf7gDUloKi0JTeWJJDSVloSm8k1JaCo3SXiHSkvCjco7DjPlMFMOM+XFPywJTaWpfFMSmso7ktBUWhJuVG5UWhI+6TBTDjPlMFNe/LIkNJWWhE9KQlNpKi0JTaWptCTcJOEdSWgqTeWTDjPlMFMOMyX+4D8sCU2lJeEJlZaEJ1SeSMKNym86zJTDTDnMlBdvSsJvUmkqLQk3Ki0JNyo3SbhJQlO5UWlJeELlHYeZcpgph5ny4sNUPikJN0m4UblR+SaVJ5LQVH7TYaYcZsphprz4siQ8ofIOlZskPKHSknCThHeotCQ0lW86zJTDTDnMlBd/uCTcqLQkPKHSknCj0pLQknCThBuVdxxmymGmHGbKi/8ZlZaEmyQ0lZaEpvKESkvCjUpLwicdZsphphxmyosvU/kmlZaEpnKjcpOEloQnkvAOld90mCmHmXKYKS8+LAm/KQlN5YkkNJUblZskfFISftNhphxmymGmxB/M/O0wUw4z5TBTDjPlMFMOM+UwUw4z5TBTDjPlMFMOM+UwUw4z5TBT/gLQwaYLAJ6ouwAAAABJRU5ErkJggg==";
 const deletedHostname = getHostname(deletedUrlLong);
 const deletedIpAddressHash = "12ca17b49af2289436f303e0166030a21e525d266e209267433801a8fd4071a0"; // sha256(127.0.0.1)
@@ -188,7 +188,7 @@ for (let i = 0; i < tests.length; i++) {
     it(tests[i]["testName"], () => {
         cy.request({
             method: tests[i]["method"],
-            url: "/api/newUrlLong",
+            url: "/api/urlLong/new",
             failOnStatusCode: false,
             body: tests[i]["body"] ? tests[i]["body"] : null,
         }).then((response) => {
@@ -227,7 +227,7 @@ for (let i = 0; i < tests.length; i++) {
 it("does not insert twice", () => {
     cy.request({
         method: "PUT",
-        url: "/api/newUrlLong",
+        url: "/api/urlLong/new",
         failOnStatusCode: false,
         body: { urlLong: responseBody.urlLong },
     }).then((response) => {
@@ -236,22 +236,20 @@ it("does not insert twice", () => {
     });
 });
 
-it("short url is available and redirects properly", () => {
+it("short url is available", () => {
     cy.request({
         method: "GET",
-        url: "/" + responseBody.urlShort,
-        followRedirect: false,
+        url: "/api/urlShort/" + responseBody.urlShort,
     }).then((response) => {
-        expect(response.status).to.eq(308);
-        expect(response.headers.location).to.eq(responseBody.urlLong);
+        expect(response.status).to.eq(200);
+        expect(response.body).to.deep.eq({ urlLong: responseBody.urlLong});
     });
 });
 
 it("deleted URLs return 410 gone", () => {
     cy.request({
         method: "GET",
-        url: "/" + deletedUrlShort,
-        followRedirect: false,
+        url: "/api/urlShort/" + deletedUrlShort,
         failOnStatusCode: false,
     }).then((response) => {
         expect(response.status).to.eq(410);
@@ -261,10 +259,10 @@ it("deleted URLs return 410 gone", () => {
 it("impossible urlShort", () => {
     cy.request({
         method: "GET",
-        url: "/äöüö",
+        url: "/api/urlShort/äöüö",
         failOnStatusCode: false,
     }).then((response) => {
-        expect(response.status).to.eq(404);
+        expect(response.status).to.eq(400);
         // cy.task("log", response);
     });
 });
@@ -273,7 +271,7 @@ it("impossible urlShort", () => {
 it("does not exist 404", () => {
     cy.request({
         method: "GET",
-        url: "/" + doesNotExistUrlShort,
+        url: "/api/urlShort/" + doesNotExistUrlShort,
         failOnStatusCode: false,
     }).then((response) => {
         expect(response.status).to.eq(404);

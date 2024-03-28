@@ -15,3 +15,12 @@ export function generateRandomStringOfLength(lengthMin: number, lengthMax: numbe
 
     return urlShort;
 }
+
+export function getHostnameFromUrlLong(urlLong: string) {
+    try {
+        const { hostname } = new URL(urlLong);
+        return hostname;
+    } catch (e) {
+        return undefined;
+    }
+}

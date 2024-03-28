@@ -32,7 +32,7 @@ echo "Deploy for $ENV"
 
 stop_server () {
 
-    if [[ $(docker compose ls -q) == "2a5" ]]
+    if [[ $(docker compose ls -q) == "2a5-api" ]]
     then
         echo "I'll shut down the runnning docker compose project..."
         docker compose --env-file ./.env.development.docker.local down
@@ -43,7 +43,7 @@ stop_server () {
 
 start_server () {
 
-    if [[ $(docker compose ls -q) == "2a5" ]]
+    if [[ $(docker compose ls -q) == "2a5-api" ]]
     then
         echo "There is a docker compose project runnning still. I'll do nothing and exit."
     else
