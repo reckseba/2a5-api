@@ -129,7 +129,7 @@ export default async function handler(
         try {
             const linkProtocol: string = process.env.LINK_PROTOCOL ?? "http";
             const linkHostname: string = process.env.LINK_HOSTNAME ?? "localhost";
-            const linkPort: number|null = (typeof process.env.LINK_PORT === "undefined" ? null : parseInt(process.env.LINK_PORT));
+            const linkPort: number|null = (typeof process.env.LINK_PORT === "undefined" || process.env.LINK_PORT == "" ? null : parseInt(process.env.LINK_PORT));
 
             if (typeof checkedBy === undefined) {
                 const newUrl = await createUrl(req.body.urlLong, hostname, linkProtocol, linkHostname, linkPort, ipAddressHash);
