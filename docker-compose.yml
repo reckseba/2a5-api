@@ -11,7 +11,7 @@ services:
     logging:
       driver: "none"
     restart: unless-stopped
-    hostname: ${DATABASE_HOST}
+    hostname: ${DOCKER_DB_HOSTNAME}
     volumes:
       - db-data:/var/lib/postgresql/data
     ports:

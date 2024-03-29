@@ -19,7 +19,7 @@ You need to install on your local workstation:
 
 Clone the repository:
 ```bash
-git clone https://github.com/reckseba/2a5.git
+git clone https://github.com/reckseba/2a5-api.git
 ```
 
 Install your environment
@@ -46,7 +46,7 @@ npm run prismagenerate
 
 Push the database schema to postgres (only on first start when docker volume is initially created)
 ```bash
-npm run prismadbpush
+npm run prismamigratedev
 ```
 
 Run the nodejs development server:
@@ -85,23 +85,21 @@ npm run lint
 # Deploy Development (locally)
 This runs the environment on docker. It does not support hot reload.
 
-Prepare your local config:
+Prepare your local config (if not done already):
 ```bash
-cp ./.env.development.docker.sample ./.env.development.docker.local
+cp ./.env.development.sample ./.env.development.local
+```
+Do changes in ./.env.development.local now.
+
+
+Start the api and db containers
+```bash
+docker compose --env-file ./.env.development.local up -d
 ```
 
-Put same db password like in `.env.development.local`
+Push the database schema to postgres (only if not done before on first start when docker volume is initially created).
 ```bash
-vim ./.env.development.docker.local
-```
-
-Start the web and db containers
-```bash
-./deploy.sh development start
-```
-
-Push the database schema to postgres (only if not done before on first start when docker volume is initially created)
-```bash
+npm install
 npm run prismamigratedeploy
 ```
 
@@ -111,59 +109,16 @@ __Warning__: This command truncates your table content!
 npm run test
 ```
 
-Stop the web and db containers
+Stop the api and db containers
 ```bash
-./deploy.sh development stop
+docker compose --env-file ./.env.development.local down
 ```
-
-Restart the web and db containers
-```bash
-./deploy.sh development restart
-```
-
-# Create SSH Config
-
-Your ~/.ssh/config file should include a section such as:
-```bash
-Host servername
-    HostName 1.2.3.4
-    User yourusername
-    IdentityFile ~/.ssh/privatekeyfile
-```
-
-# Security Considerations 
-
-You could launch this API twice
-- One public facing for the Client-APP with high restrictions on the database
-- The other in private not being exposed to the public with a little more rights to facilitate the admin operations.
-
-# Deploy Test
-This builds, takes the increment, uploads it and runs it in docker on the server.
-
-Prepare your local config
-```bash
-cp ./.env.test.docker.sample ./.env.test.docker.local
-vim ./.env.test.local
-```
-
-This will build the Dockerfile until the builder stage. Then it runs a docker container named `2a5-build` from which the deployment script will copy the build increments. Finally it copies the build to your remote location, unpacks and runs it via docker compose. At last it migrates the latest database schema to the postgres instance.
-```bash
-./deploy.sh test build servername
-```
-
-The following command stops the remote containers and deletes the directory `build`.
-```bash
-./deploy.sh test clean servername
-```
-If you want to remove images and volumes, have a look at the Cleanup remote section.
-
 
 # Cleanup locally
 
 Delete all generated files
 ```bash
 rm -rf .next/ node_modules/ next-env.d.ts cypress/screenshots/ cypress/videos/
-
 ```
 If you want to delete your docker postgres image (volume with database entries remains)
 ```bash
@@ -185,15 +140,6 @@ DANGER! Erases all images
 docker image prune -a
 ```
 
-# Cleanup remote test
+# Deployment to test/staging/production systems
 
-Remove the volume
-```bash
-docker volume rm 2a5-db-data-test
-```
-
-Remove used images
-```bash
-docker image rm 2a5-web-test:latest
-docker image rm postgres:14-alpine
-```
+Checkout 2a5-deploy repository.
