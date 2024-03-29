@@ -17,6 +17,8 @@ services:
     ports:
       - "${DATABASE_PORT}:${DATABASE_PORT}"
     container_name: ${DOCKER_DB_CONTAINERNAME:-2a5-db-development}
+    networks:
+      - 2a5
 
   api:
     build:
@@ -30,7 +32,13 @@ services:
     ports:
       - "${DOCKER_API_PORT:-3000}:3000"
     container_name: ${DOCKER_API_CONTAINERNAME:-2a5-api-development}
+    networks:
+      - 2a5
 
 volumes:
   db-data:
     name: ${DOCKER_DB_VOLUMENAME:-2a5-db-data-development}
+
+networks:
+  2a5:
+    name: 2a5
