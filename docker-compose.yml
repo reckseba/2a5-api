@@ -1,4 +1,3 @@
-version: "3"
 services:
 
   db:
@@ -24,16 +23,38 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-      target: ${DOCKER_API_TARGET:-runner}
+      target: ${DOCKER_API_TARGET:-dev}
     depends_on: 
       - db
+    environment:
+      DATABASE_URL: "postgresql://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DOCKER_DB_HOSTNAME}:${DATABASE_PORT}/${DATABASE_NAME}"
+      ADMIN_TOKEN: ${ADMIN_TOKEN}
+      LINK_PROTOCOL: ${LINK_PROTOCOL}
+      LINK_HOSTNAME: ${LINK_HOSTNAME}
+      LINK_PORT: ${LINK_PORT}
     hostname: ${DOCKER_API_HOSTNAME:-2a5-api-development}
-    image: ${DOCKER_API_IMAGE:-2a5-api-development}
     ports:
       - "${DOCKER_API_PORT:-3000}:3000"
     container_name: ${DOCKER_API_CONTAINERNAME:-2a5-api-development}
     networks:
       - 2a5
+    command: npm run dev
+    develop:
+      watch:
+        - action: sync
+          path: ./lib
+          target: /app/lib
+        - action: sync
+          path: ./pages
+          target: /app/pages
+        - action: sync
+          path: ./public
+          target: /app/public
+        - action: sync
+          path: ./middleware.ts
+          target: /app/middleware.ts
+        - action: rebuild
+          path: package.json
 
 volumes:
   db-data:
