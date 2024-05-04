@@ -54,7 +54,7 @@ Run the nodejs development server:
 npm run dev
 ```
 
-Start coding and open [http://localhost:3000](http://localhost:3000) with your browser of choice to check the result. The system supports hot reload.
+Happy coding. API is available at [http://localhost:3000/api](http://localhost:3000/api).
 
 If you do changes to the database schema run (while db is up)
 ```bash
@@ -76,6 +76,12 @@ __Warning__: This command truncates your table content!
 npm run test
 ```
 
+Check your API via curl:
+```bash
+source .env.development.local && curl localhost:3000/api/token/correct -H "Accept: application/json" -H "Authorization: Bearer ${ADMIN_TOKEN}"
+```
+Expected response: `{"message":"success"}`
+
 # Linting
 Run to check for linting errors:
 ```bash
@@ -83,7 +89,7 @@ npm run lint
 ```
 
 # Deploy Development (locally)
-This runs the environment on docker. It does not support hot reload.
+This runs the environment on docker. It supports hot reload.
 
 Prepare your local config (if not done already):
 ```bash
@@ -92,9 +98,9 @@ cp ./.env.development.sample ./.env.development.local
 Do changes in ./.env.development.local now.
 
 
-Start the api and db containers
+Start the api and db containers (In -d detached mode, watch does not work)
 ```bash
-docker compose --env-file ./.env.development.local up -d
+docker compose --env-file ./.env.development.local up --build --watch
 ```
 
 Push the database schema to postgres (only if not done before on first start when docker volume is initially created).
