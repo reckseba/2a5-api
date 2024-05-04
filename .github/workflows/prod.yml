@@ -26,4 +26,5 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: Dockerfile
+          buildoptions: "--target runner"
           tags: latest
