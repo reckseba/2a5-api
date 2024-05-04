@@ -21,9 +21,9 @@ jobs:
       - name: Build and Publish to Github Packages Registry
         uses: elgohr/Publish-Docker-Github-Action@v5
         with:
-          name: reckseba/2a5-api/2a5-api-test
+          name: reckseba/2a5-api/2a5-api
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
           dockerfile: Dockerfile
-          tags: latest
+          tags: test
