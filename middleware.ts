@@ -4,7 +4,7 @@ import type { NextRequest } from "next/server";
 export function middleware(req: NextRequest) {
 
     if (req.nextUrl.pathname.match("/api/urlShort/*") || req.nextUrl.pathname.match("/api/urlLong/new")) {
-        // only this route is unauthenticated ok
+        // only these routes are unauthenticated ok
         return;
     }
 
