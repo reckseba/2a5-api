@@ -1,6 +1,6 @@
 import type { NextApiRequest, NextApiResponse } from "next";
 import { getUrlById, getUrlsDeletedByHostname, setUrlsWhitelistedByHostname } from "../../../../lib/urls";
-import { getHostnameWhitelistedByHostname, createHostnameWhitelisted } from "../../../../lib/hostnames";
+import { getHostnameWhitelistedByHostname, getHostnameBlacklistedByHostname, createHostnameWhitelisted } from "../../../../lib/hostnames";
 
 type ResponseType = {
     message: string;
@@ -33,10 +33,18 @@ export default async function handler(
     }
 
     // check if hostname is whitelisted already
-    const hostname = await getHostnameWhitelistedByHostname(url.hostname);
+    const hostnameWhitelisted = await getHostnameWhitelistedByHostname(url.hostname);
 
-    if (hostname) {
+    if (hostnameWhitelisted) {
         res.status(400).json({ message: "error - whitelisted already", hostname: url.hostname});
+        return;
+    }
+
+    // check if hostname is whitelisted already
+    const hostnameBlacklisted = await getHostnameBlacklistedByHostname(url.hostname);
+
+    if (hostnameBlacklisted) {
+        res.status(400).json({ message: "error - blacklisted already", hostname: url.hostname});
         return;
     }
 
